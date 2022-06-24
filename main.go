@@ -64,6 +64,7 @@ func main() {
 
 	c := cron.New()
 	for _, location := range locations {
+		log.Printf("location: %s %s %s %s\n", location.State, location.City, location.Field1, location.Field2)
 		c.AddFunc(`@every 1m`, wrap(location.State, location.City, location.Field1, location.Field2))
 	}
 	c.Start()
