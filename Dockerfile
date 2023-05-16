@@ -10,7 +10,8 @@ COPY go.mod ./
 COPY go.sum ./
 COPY main.go ./
 
-RUN CGO_ENABLED=0 go build -ldflags '-extldflags "-static"' -o metrics-weather
+RUN go test -race ./... \
+ && CGO_ENABLED=0 go build -ldflags '-extldflags "-static"' -o metrics-weather
 
 
 FROM scratch

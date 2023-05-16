@@ -1,0 +1,13 @@
+[Unit]
+Description=carbon.cc weather
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+Restart=always
+ExecStart=/opt/ccc/bin/ccc-weather-start
+ExecStop=/opt/ccc/bin/ccc-weather-stop
+
+[Install]
+WantedBy=multi-user.target
