@@ -1,4 +1,4 @@
-module metrics-weather
+module ccc-weather
 
 go 1.18
 
