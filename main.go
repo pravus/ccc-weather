@@ -88,6 +88,9 @@ func wrap(state, city, field1, field2 string) func() {
 func probe(url, state, city string) {
 	var setGauge = func(doc *html.Node, class string) error {
 		if value, unit, err := parse(doc, class); err != nil {
+			if strings.Contains(err.Error(), `no nodes found`) {
+				return nil
+			}
 			return err
 		} else if gauge, found := gauges[unit]; !found {
 			return fmt.Errorf(`gauge "%s" not found`, unit)
@@ -98,13 +101,13 @@ func probe(url, state, city string) {
 	}
 
 	if doc, err := htmlquery.LoadURL(url); err != nil {
-		log.Printf(`forecast.load: %s`, err)
+		log.Printf(`forecast.load: %s, %s %s [%s]`, city, state, err, url)
 	} else {
 		if err := setGauge(doc, `myforecast-current-lrg`); err != nil {
-			log.Printf(`forecast.f: %s`, err)
+			log.Printf(`forecast.f: %s, %s %s [%s]`, city, state, err, url)
 		}
 		if err := setGauge(doc, `myforecast-current-sm`); err != nil {
-			log.Printf(`forecast.c: %s`, err)
+			log.Printf(`forecast.c: %s, %s %s [%s]`, city, state, err, url)
 		}
 	}
 }
@@ -114,8 +117,10 @@ func parse(doc *html.Node, class string) (float64, string, error) {
 		return 0, ``, err
 	} else if len(nodes) <= 0 {
 		return 0, ``, fmt.Errorf(`no nodes found for "%s"`, class)
-	} else if match := regexpTemp.FindStringSubmatch(htmlquery.InnerText(nodes[0])); len(match) <= 2 {
-		return 0, ``, fmt.Errorf(`malformed node found for "%s"`, class)
+	} else if text := htmlquery.InnerText(nodes[0]); text == `` || text == `N/A` {
+		return 0, ``, fmt.Errorf(`no nodes found for "%s"`, class)
+	} else if match := regexpTemp.FindStringSubmatch(text); len(match) <= 2 {
+		return 0, ``, fmt.Errorf(`malformed node found for "%s": %s`, class, text)
 	} else if v, err := strconv.ParseInt(match[1], 10, 64); err != nil {
 		return 0, ``, err
 	} else {
